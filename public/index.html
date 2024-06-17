@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time-ChatApp</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        form{
+            position:fixed;
+            bottom: 6px;
+            display: flex;
+            box-sizing: border-box;
+            left: 0;
+            width: 100%;
+        }
+        form input{
+            border: 0;
+            padding: 0.5rem;
+            width: 100%;
+            outline: 0;
+            margin-right: 0.5rem;
+            border-radius: 0.25rem;
+            background: #ccc
+        }
+        form button{
+            width: 6rem;
+            background-color: #1b8c00;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            text-transform: uppercase;
+        }
+        form button:hover{
+            background-color: #166d01;
+        }
+        h1{
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .messages {
+            margin: 0;
+            padding: 0;
+            margin-bottom: 3rem;
+        }
+
+        .messages li {
+            padding: 0.5rem;
+        }
+
+        .messages li:nth-child(odd) {
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>MyChatApp</h1>
+    <ul class="messages"></ul>
+    <form>
+        <input type="text" class="input" autofocus autocomplete="off">
+        <button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const form = document.querySelector("form");
+        const input = document.querySelector(".input");
+        const ul = document.querySelector(".messages");
+        const username = prompt("Enter Username: ","");
+        const socket = io();
+
+        form.addEventListener("submit",(e) => {
+            e.preventDefault();
+
+            const message = input.value;
+            addMessage(username+": "+message);
+
+            socket.emit("chat-message",{
+                username:username,
+                message:message,
+            });
+            
+            input.value = "";
+        });
+
+        socket.on("message", (data) => {
+                if(username !== data.username)
+                    addMessage(data.username + ": " + data.message)
+            });
+
+        socket.on("user-join", (username) => {
+                addMessage(username + " just joined the chat!")
+            });
+
+        socket.on("user-leave", (leftuser) => {
+                addMessage(leftuser + " has left the chat!")
+            });
+
+        addMessage("You have joined the chat as '" + username + "'.");
+        socket.emit("user-join", username);
+
+        function addMessage(msg){
+            const li = document.createElement("li");
+            li.innerText = msg;
+            ul.appendChild(li);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+    </script>
+</body>
+</html>
